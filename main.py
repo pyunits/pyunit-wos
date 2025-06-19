@@ -3,7 +3,7 @@ import tkinter as tk
 from threading import Thread
 from tkinter import messagebox, ttk
 
-from wos import WOS
+from wos import WOS, Status
 
 
 class WOSApp:
@@ -24,8 +24,8 @@ class WOSApp:
         self.qid_entry.grid(row=1, column=1, padx=10, pady=10)
 
         tk.Label(root, text="数据大小:").grid(row=2, column=0, padx=10, pady=10, sticky=tk.W)
-        self.size_var = tk.IntVar(value=1000)
-        self.size_spinbox = tk.Spinbox(root, from_=1, to=1000_0000, textvariable=self.size_var, width=28)
+        self.size_var = tk.IntVar(value=0)
+        self.size_spinbox = tk.Spinbox(root, from_=0, to=100_0000, textvariable=self.size_var, width=28)
         self.size_spinbox.grid(row=2, column=1, padx=10, pady=10)
 
         self.progress_label = tk.Label(root, text="下载进度:")
@@ -52,13 +52,13 @@ class WOSApp:
             self.progress["maximum"] = size
             dirs = os.path.abspath(".")
             file = os.path.join(dirs, "WOS.xlsx")
-            self.wos = WOS(sid=sid, qid=qid)
+            self.wos = WOS(sid=sid, qid=qid, savefile=file)
             self.wos.run(size)
-            self.wos.save(file)
             messagebox.showinfo("成功", f"文件已保存到：{file}")
         except Exception as e:
             messagebox.showerror("错误", f"下载失败：{str(e)}")
         finally:
+            self.wos.save()
             self.button.config(state="normal")
 
     def onclick(self):
@@ -69,32 +69,34 @@ class WOSApp:
 
     def progress_bar(self, thread):
         if thread.is_alive():
-            code = self.wos.code if self.wos else -1
-            if code == 3:
+            if self.wos is None:
+                return
+
+            code = self.wos.code
+            if code == Status.ERROR:
                 messagebox.showerror("错误", "输入错误或网络错误")
                 self.button.config(state="normal")
+                return
+
+            if code == Status.LIMIT:
+                self.progress_label.config(text=f"刷新网站~")
+                self.progress.config(style="red.Horizontal.TProgressbar")
+                self.root.after(8000, self.progress_bar, thread)
                 return
 
             count = self.wos.size
             self.progress["value"] = count
             process = round(count / self.size_var.get().real * 100)
-
-            print(code, count, self.size_var.get().real)
-            if code == 1:
-                self.progress_label.config(text=f"刷新网站~")
-                self.progress.config(style="red.Horizontal.TProgressbar")
-                self.root.after(8000, self.progress_bar, thread)
-            else:
-                self.progress_label.config(text=f"下载中: {process}%")
-                self.progress.config(style="default.Horizontal.TProgressbar")
-                self.root.after(3000, self.progress_bar, thread)
-            self.root.update()
+            self.progress_label.config(text=f"下载中: {process}%")
+            self.progress.config(style="default.Horizontal.TProgressbar")
+            self.root.after(3000, self.progress_bar, thread)
 
 
-ui = tk.Tk()
-style = ttk.Style()
-style.theme_use("clam")
-style.configure("red.Horizontal.TProgressbar", background="red", troughcolor="lightgray")
-style.configure("default.Horizontal.TProgressbar", background="blue", troughcolor="lightgray")
-WOSApp(ui)
-ui.mainloop()
+if __name__ == '__main__':
+    ui = tk.Tk()
+    style = ttk.Style()
+    style.theme_use("clam")
+    style.configure("red.Horizontal.TProgressbar", background="red")
+    style.configure("default.Horizontal.TProgressbar", background="blue")
+    WOSApp(ui)
+    ui.mainloop()
