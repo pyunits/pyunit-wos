@@ -9,4 +9,6 @@ dependencies = [
     "requests",
     "tqdm",
     "xlrd",
+    "pyarrow",
+    "fastparquet"
 ]

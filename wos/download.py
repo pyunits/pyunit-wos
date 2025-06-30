@@ -1,3 +1,4 @@
+import os
 import time
 from io import BytesIO
 
@@ -24,15 +25,30 @@ class WOS:
         param["parentQid"] = self.qid
         return param
 
+    def __is_exit__(self, start, end):
+        """增加缓存文件"""
+        cache_dir = os.path.join(os.path.dirname(self.savefile), ".cache")
+        if not os.path.exists(cache_dir):
+            os.makedirs(cache_dir)
+        cache_file = os.path.join(cache_dir, f"{start}-{end}.{self.qid}.parquet")
+        ok = os.path.exists(cache_file)
+        return cache_file, ok
+
     def __download__(self, param) -> Status:
-        response = requests.post(url, json=param, headers={"X-1p-Wos-Sid": self.sid})
-        if response.status_code == 500:
-            return Status.LIMIT
+        cache_file, ok = self.__is_exit__(param["markFrom"], param["markTo"])
+        if not ok:
+            response = requests.post(url, json=param, headers={"X-1p-Wos-Sid": self.sid})
+            if response.status_code == 500:
+                return Status.LIMIT
 
-        if response.status_code != 200:
-            return Status.ERROR
+            if response.status_code != 200:
+                return Status.ERROR
 
-        df = pd.read_excel(BytesIO(response.content))
+            df = pd.read_excel(BytesIO(response.content), dtype=str)
+            df.to_parquet(cache_file, index=False)
+        else:
+            df = pd.read_parquet(cache_file)
+
         if self.size == 1:
             self.size = df.shape[0]
         else:
