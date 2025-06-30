@@ -51,14 +51,14 @@ class WOSApp:
         try:
             self.progress["maximum"] = size
             dirs = os.path.abspath(".")
-            file = os.path.join(dirs, "WOS.xlsx")
+            file = os.path.join(dirs, f"{qid}.xlsx")
             self.wos = WOS(sid=sid, qid=qid, savefile=file)
             self.wos.run(size)
+            self.wos.save()
             messagebox.showinfo("成功", f"文件已保存到：{file}")
         except Exception as e:
             messagebox.showerror("错误", f"下载失败：{str(e)}")
         finally:
-            self.wos.save()
             self.button.config(state="normal")
 
     def onclick(self):
