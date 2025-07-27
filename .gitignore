@@ -1,6 +1,6 @@
 .venv
 .idea
-main.spec
+*.spec
 build
 dist
 .cache

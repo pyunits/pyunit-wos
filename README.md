@@ -1,5 +1,14 @@
 # WOS下载器
 
+## 手动编译
+
+```shell
+uv tool install pyinstaller
+uvx pyinstaller -F -w --clean -i wos.ico --name wos --paths .\.venv\Lib\site-packages\ .\main.py
+```
+
+## 界面
+
 ![下载.png](img/%E4%B8%8B%E8%BD%BD.png)
 
 ## 在网页获取参数

@@ -10,7 +10,7 @@ class WOSApp:
     def __init__(self, root):
         self.root = root
         self.root.title("WOS 数据下载工具")
-        self.root.geometry("350x250")
+        self.center_window(330, 250)
         self.root.resizable(False, False)
         self.wos = None
 
@@ -37,6 +37,13 @@ class WOSApp:
         # 下载按钮
         self.button = tk.Button(root, text="开始下载", command=self.onclick, width=20, height=2)
         self.button.grid(row=4, column=0, columnspan=2, pady=10)
+
+    def center_window(self, w, h):
+        ws = self.root.winfo_screenwidth()
+        hs = self.root.winfo_screenheight()
+        x = (ws / 2) - (w / 2)
+        y = (hs / 2) - (h / 2)
+        self.root.geometry('%dx%d+%d+%d' % (w, h, x, y))
 
     def __download__(self):
         """获取用户输入并开始下载"""
@@ -94,6 +101,7 @@ class WOSApp:
 
 if __name__ == '__main__':
     ui = tk.Tk()
+    ui.attributes('-topmost', 'true')
     style = ttk.Style()
     style.theme_use("clam")
     style.configure("red.Horizontal.TProgressbar", background="red")

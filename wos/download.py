@@ -7,7 +7,6 @@ import requests
 
 from .config import *
 
-
 class WOS:
     def __init__(self, sid, qid: str, *, savefile, batch=1000):
         self.qid = qid
@@ -72,9 +71,10 @@ class WOS:
         dfs = []
         for path in os.listdir(self.cache_dir):
             if path.endswith(f"{self.qid}.parquet"):
-                df = pd.read_parquet(os.path.join(self.cache_dir,path))
+                df = pd.read_parquet(os.path.join(self.cache_dir, path))
                 dfs.append(df)
 
         if dfs:
-            df = pd.concat(dfs, axis=0, ignore_index=True)
+            df = pd.concat(dfs, axis=0)
+            df.drop_duplicates(inplace=True)
             df.to_excel(self.savefile, index=False)
